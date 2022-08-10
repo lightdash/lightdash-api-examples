@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "lightdash-python-scripts"
+name = "lightdash-api-client"
 version = "0.1.0"
 description = ""
 authors = ["oliverlaslett <olaslett@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-requests = "^2.28.1"
+python = ">=3.7"
+requests = ">=2.0.0"
 
 [tool.poetry.dev-dependencies]
 
