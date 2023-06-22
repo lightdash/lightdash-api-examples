@@ -28,7 +28,7 @@ class LightdashApiClient:
             print(response.text)
             raise e
         if j['status'] == 'ok':
-            return j['results']
+            return j.get('results')
         return j['error']
 
     def health(self):
@@ -70,8 +70,8 @@ class LightdashApiClient:
     def saved_chart(self, chart_uuid):
         return self._api_call('GET', f'/saved/{chart_uuid}')
 
-    def create_empty_space(self, name):
-        return self._api_call('POST', f'/projects/{self.project_id}/spaces', json={'name': name})
+    def create_empty_space(self, space):
+        return self._api_call('POST', f'/projects/{self.project_id}/spaces', json=space)
 
     def create_saved_chart(self, saved_chart):
         return self._api_call('POST', f'/projects/{self.project_id}/saved', json=saved_chart)
@@ -80,8 +80,15 @@ class LightdashApiClient:
         return self._api_call('POST', f'/projects/{self.project_id}/dashboards', json=dashboard)
 
     def create_space(self, space):
-        empty_space = self.create_empty_space(space['name'])
-        for saved_chart in space['queries']:
+        empty_space = self.create_empty_space({
+            key: space[key] for key in space if key not in ['queries', 'dashboards']
+        })
+        for idx, saved_chart in enumerate(space['queries']):
+            print(f'Coping chart {idx+1} of {len(space["queries"])}: {saved_chart["name"]}')
             self.create_saved_chart({**saved_chart, 'spaceUuid': empty_space['uuid']})
-        for dashboard in space['dashboards']:
+        for idx, dashboard in enumerate(space['dashboards']):
+            print(f'Coping dashboard {idx+1} of {len(space["dashboards"])}: {dashboard["name"]}')
             self.create_dashboard({**dashboard, 'spaceUuid': empty_space['uuid']})
+
+    def delete_space(self, space_uuid):
+        return self._api_call('DELETE', f'/projects/{self.project_id}/spaces/{space_uuid}')
