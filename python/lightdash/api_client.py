@@ -110,3 +110,12 @@ class LightdashApiClient:
     
     def update_project_access_for_user(self, project_uuid, user_uuid, role):
         return self._api_call('PATCH', f'/projects/{project_uuid}/access/{user_uuid}', json=role)
+
+    def user_attributes(self):
+        return self._api_call('GET', f'/api/v1/org/attributes')
+
+    def create_user_attribute(self, attribute):
+        return self._api_call('POST', f'/api/v1/org/attributes', json=attribute)
+
+    def update_user_attribute(self, attribute_uuid, attribute):
+        return self._api_call('PUT', f'/api/v1/org/attributes/{attribute_uuid}', json=attribute)
