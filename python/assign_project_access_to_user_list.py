@@ -23,21 +23,18 @@ if __name__ == '__main__':
         email = row['email']
         new_role = row['role']
         current_role = row['current_role']
-        has_existing_project_role = row['current_role'] is not None
-        has_existing_org_role = row['role_org'] is not None       
+        has_existing_project_role = not pd.isnull(row['current_role'])
+        has_existing_org_role = not pd.isnull(row['role_org'])
         access_json = {'sendEmail': False, 'role': new_role, 'email': email}
-        role_json = {'role':new_role}       
-
-        if not has_existing_org_role:
-            print(f'User {email} does not exist in organization')
-            continue
+        role_json = {'role': new_role}
+        
+        if not has_existing_org_role: 
+            print(f'Skipping: User {email} does not exist in organization')
         elif not has_existing_project_role:
             print(f'Granting role {new_role} to {email}')
-            target.grant_project_access_to_user(TARGET_PROJECT_ID, access)
+            target.grant_project_access_to_user(TARGET_PROJECT_ID, access_json)
         elif ROLES.index(current_role) < ROLES.index(new_role):
             print(f'Updating role for {email} from {current_role} to {new_role}')
             target.update_project_access_for_user(TARGET_PROJECT_ID, row['user_uuid'], role_json)
         elif ROLES.index(current_role) >= ROLES.index(new_role):
             print(f'Skipping: {email} already has {current_role} access')
-            
-    
