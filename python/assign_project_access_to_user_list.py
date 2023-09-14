@@ -4,8 +4,8 @@ import pandas as pd
 TARGET_URL = 'https://app.lightdash.cloud/api/v1/'
 TARGET_API_KEY = ''
 TARGET_PROJECT_ID = ''
-USER_PERMS_FILEPATH = '~/Documents/my_file.csv' #This file should have "email" and "role" columns
-ROLES=['viewer', 'interactive_viewer', 'editor', 'developer', 'admin']
+USER_PERMS_FILEPATH = '~/Documents/user_permission_list.csv' #This file should have "email" and "role" columns
+LIGHTDASH_ROLES = ['viewer', 'interactive_viewer', 'editor', 'developer', 'admin']
 
 if __name__ == '__main__':
     target = LightdashApiClient(TARGET_URL, TARGET_API_KEY, TARGET_PROJECT_ID)
@@ -33,8 +33,8 @@ if __name__ == '__main__':
         elif not has_existing_project_role:
             print(f'Granting role {new_role} to {email}')
             target.grant_project_access_to_user(TARGET_PROJECT_ID, access_json)
-        elif ROLES.index(current_role) < ROLES.index(new_role):
+        elif LIGHTDASH_ROLES.index(current_role) < LIGHTDASH_ROLES.index(new_role):
             print(f'Updating role for {email} from {current_role} to {new_role}')
             target.update_project_access_for_user(TARGET_PROJECT_ID, row['user_uuid'], role_json)
-        elif ROLES.index(current_role) >= ROLES.index(new_role):
+        elif LIGHTDASH_ROLES.index(current_role) >= LIGHTDASH_ROLES.index(new_role):
             print(f'Skipping: {email} already has {current_role} access')
