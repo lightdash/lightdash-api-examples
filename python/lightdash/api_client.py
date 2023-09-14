@@ -92,3 +92,21 @@ class LightdashApiClient:
 
     def delete_space(self, space_uuid):
         return self._api_call('DELETE', f'/projects/{self.project_id}/spaces/{space_uuid}')
+    
+    def users(self):
+        return self._api_call('GET', f'/org/users')
+    
+    def get_project(self, project_uuid):
+        return self._api_call('GET', f'/projects/{project_uuid}')
+    
+    def get_project_access_list(self, project_uuid):
+        return self._api_call('GET', f'/projects/{project_uuid}/access')
+    
+    def get_member_project_access(self, project_uuid, user_uuid):
+        return self._api_call('GET', f'/projects/{project_uuid}/user/{user_uuid}')
+    
+    def grant_project_access_to_user(self, project_uuid, access):
+        return self._api_call('POST', f'/projects/{project_uuid}/access', json=access)
+    
+    def update_project_access_for_user(self, project_uuid, user_uuid, role):
+        return self._api_call('PATCH', f'/projects/{project_uuid}/access/{user_uuid}', json=role)
