@@ -2,10 +2,10 @@ from lightdash.api_client import LightdashApiClient
 import pandas as pd
 
 # Update these variables
-TARGET_URL = 'http://localhost:3000/api/v1/'
-TARGET_API_KEY = 'fbf7a899dc3e616e5cacd1fa92588425'
-CSV_FILEPATH = '~/Documents/test.csv' #This file should have "email" and "value" columns
-ATTRIBUTE_NAME = 'fruit'
+TARGET_URL = 'https://app.lightdash.cloud/api/v1/'
+TARGET_API_KEY = ''
+CSV_FILEPATH = '~/Documents/user_attributes_list.csv' #This file should have "email" and "value" columns
+ATTRIBUTE_NAME = ''
 
 
 if __name__ == "__main__":
