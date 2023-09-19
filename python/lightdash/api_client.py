@@ -4,7 +4,7 @@ import requests
 
 
 class LightdashApiClient:
-    def __init__(self, base_url, api_key, project_id):
+    def __init__(self, base_url, api_key, project_id=None):
         session = requests.Session()
         session.headers.update({
             'Authorization': f'ApiKey {api_key}',
@@ -112,10 +112,10 @@ class LightdashApiClient:
         return self._api_call('PATCH', f'/projects/{project_uuid}/access/{user_uuid}', json=role)
 
     def user_attributes(self):
-        return self._api_call('GET', f'/api/v1/org/attributes')
+        return self._api_call('GET', f'/org/attributes')
 
     def create_user_attribute(self, attribute):
-        return self._api_call('POST', f'/api/v1/org/attributes', json=attribute)
+        return self._api_call('POST', f'/org/attributes', json=attribute)
 
     def update_user_attribute(self, attribute_uuid, attribute):
-        return self._api_call('PUT', f'/api/v1/org/attributes/{attribute_uuid}', json=attribute)
+        return self._api_call('PUT', f'/org/attributes/{attribute_uuid}', json=attribute)
