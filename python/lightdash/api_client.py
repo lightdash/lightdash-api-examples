@@ -79,6 +79,9 @@ class LightdashApiClient:
     def create_dashboard(self, dashboard):
         return self._api_call('POST', f'/projects/{self.project_id}/dashboards', json=dashboard)
 
+    def update_dashboard(self, dashboard_uuid, dashboard):
+        return self._api_call('PATCH', f'/dashboards/{dashboard_uuid}', json=dashboard)
+
     def create_space(self, space):
         empty_space = self.create_empty_space({
             key: space[key] for key in space if key not in ['queries', 'dashboards']

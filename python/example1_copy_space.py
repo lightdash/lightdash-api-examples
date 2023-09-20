@@ -40,23 +40,38 @@ if __name__ == '__main__':
         new_dashboard = {
             'name': dashboard['name'],
             'description': dashboard.get('description', ''),
-            'spaceUuid': SPACE_UUID_MAP[dashboard["spaceUuid"]]
+            'spaceUuid': SPACE_UUID_MAP[dashboard["spaceUuid"]],
+            'tiles': []
         }
-        if dashboard.get('tiles'):
-            new_dashboard['tiles'] = [
-                {
-                    **tile,
-                    'properties': {
-                        **tile['properties'],
-                        # try to get the new id but if it was already a broken reference, use the old id
-                        'savedChartUuid': CHART_UUID_MAP.get(tile['properties']['savedChartUuid'], tile['properties']['savedChartUuid'])
-                    }
-                } 
-                if tile['type'] == 'saved_chart' else tile 
-                for tile in dashboard.get('tiles', [])
-            ]
-        else:
-            new_dashboard['tiles'] = []
         if dashboard.get('filters'):
             new_dashboard['filters'] = dashboard['filters']
-        target_client.create_dashboard(new_dashboard)
+        new_dashboard = target_client.create_dashboard(new_dashboard)
+
+        tiles = dashboard.get("tiles")
+        if tiles:
+            print(f'Copying {len(tiles)} tiles')
+            new_tiles = []
+            for idx, tile in enumerate(tiles):
+                if tile['type'] == 'saved_chart':
+                    if "belongsToDashboard" in tile["properties"]:
+                        print(f'Copying chart that belongs to dashboard: {tile["properties"]["chartName"]}')
+                        chart = target_client.saved_chart(tile['properties']['savedChartUuid'])
+                        new_chart = target_client.create_saved_chart({**chart, 'dashboardUuid': new_dashboard["uuid"]})
+                        CHART_UUID_MAP[chart["uuid"]] = new_chart["uuid"]
+
+                    new_tiles.append({
+                          **tile,
+                          'properties': {
+                              **tile['properties'],
+                              # try to get the new id but if it was already a broken reference, use the old id
+                              'savedChartUuid': CHART_UUID_MAP.get(tile['properties']['savedChartUuid'], tile['properties']['savedChartUuid'])
+                          }
+                      })
+                else:
+                    new_tiles.append(tile)
+            target_client.update_dashboard(new_dashboard["uuid"], {
+                'tiles': new_tiles
+            })
+        else:
+           print(f'No tiles to copy')
+
