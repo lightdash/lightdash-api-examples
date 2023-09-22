@@ -1,3 +1,3 @@
 # Examples for using the Lightdash API
 
-This repo contains examples for using the Lightdash API in python
+This repo contains examples for using the Lightdash API in python and javascript
