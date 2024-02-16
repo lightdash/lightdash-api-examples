@@ -70,6 +70,7 @@ if __name__ == '__main__':
                 else:
                     new_tiles.append(tile)
             target_client.update_dashboard(new_dashboard["uuid"], {
+                'filters': new_dashboard.get('filters'),
                 'tiles': new_tiles
             })
         else:
