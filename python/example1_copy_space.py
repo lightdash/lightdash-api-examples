@@ -53,7 +53,7 @@ if __name__ == '__main__':
             new_tiles = []
             for idx, tile in enumerate(tiles):
                 if tile['type'] == 'saved_chart':
-                    if "belongsToDashboard" in tile["properties"]:
+                    if "belongsToDashboard" in tile["properties"] and tile["properties"]["belongsToDashboard"] == True:
                         print(f'Copying chart that belongs to dashboard: {tile["properties"]["chartName"]}')
                         chart = target_client.saved_chart(tile['properties']['savedChartUuid'])
                         new_chart = target_client.create_saved_chart({**chart, 'dashboardUuid': new_dashboard["uuid"]})
