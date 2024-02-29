@@ -1,14 +1,18 @@
 from lightdash.api_client import LightdashApiClient
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Lightdash space to copy
-SOURCE_URL = 'https://app.lightdash.cloud/api/v1/'
-SOURCE_API_KEY = ''
-SOURCE_PROJECT_ID = ''
+SOURCE_URL = os.getenv('SOURCE_URL')
+SOURCE_API_KEY = os.getenv('SOURCE_API_KEY')
+SOURCE_PROJECT_ID = os.getenv('SOURCE_PROJECT_ID')
 
 # Lightdash project to create new space
-TARGET_URL = 'https://eu1.lightdash.cloud/api/v1/'
-TARGET_API_KEY = ''
-TARGET_PROJECT_ID = ''
+TARGET_URL = os.getenv('TARGET_URL')
+TARGET_API_KEY = os.getenv('TARGET_API_KEY')
+TARGET_PROJECT_ID = os.getenv('TARGET_PROJECT_ID')
 
 if __name__ == '__main__':
     source_client = LightdashApiClient(SOURCE_URL, SOURCE_API_KEY, SOURCE_PROJECT_ID)
@@ -55,10 +59,10 @@ if __name__ == '__main__':
                 if tile['type'] == 'saved_chart':
                     if "belongsToDashboard" in tile["properties"] and tile["properties"]["belongsToDashboard"] == True:
                         print(f'Copying chart that belongs to dashboard: {tile["properties"]["chartName"]}')
-                        chart = target_client.saved_chart(tile['properties']['savedChartUuid'])
-                        new_chart = target_client.create_saved_chart({**chart, 'dashboardUuid': new_dashboard["uuid"]})
+                        chart = source_client.saved_chart(tile['properties']['savedChartUuid'])
+                        new_chart = target_client.create_saved_chart({**chart, 'dashboardUuid': new_dashboard["uuid"],"spaceUuid": SPACE_UUID_MAP[dashboard["spaceUuid"]]}
+                                                                     )
                         CHART_UUID_MAP[chart["uuid"]] = new_chart["uuid"]
-
                     new_tiles.append({
                           **tile,
                           'properties': {
