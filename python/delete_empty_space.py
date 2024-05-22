@@ -4,7 +4,7 @@ from lightdash.api_client import LightdashApiClient
 # Update these variables
 TARGET_URL = 'https://app.lightdash.cloud/api/v1/'
 TARGET_API_KEY = '' # Your personal Personal Access Token from Lightdash
-TARGET_PROJECT_ID = '5a5e6741-cc9b-49d5-89b1-86c2639f155e' # Project ID to delete empty Spaces
+TARGET_PROJECT_ID = '' # Project ID to delete empty Spaces
 
 if __name__ == '__main__':
     target_client = LightdashApiClient(TARGET_URL, TARGET_API_KEY, TARGET_PROJECT_ID)
