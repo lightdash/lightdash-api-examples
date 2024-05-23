@@ -77,22 +77,31 @@ if __name__ == '__main__':
         print(f'Identified {tot_deletes} Lightdash previews to be deleted')
 
         ## CLOSE UNNEEDED LIGHTDASH PREVIEWS
-        # Can't currently find an option to delete projects via API, using bash to delete with Lightdash CLI
-        # Download latest version of lightdash CLI
-        print('Downloading latest version of Lightdash CLI...')
-        # Get Lightdash version
-        res = subprocess.run('curl -s "https://collectors.lightdash.cloud/api/v1/health" | jq -r \'.results.version\'', shell=True, stdout=subprocess.PIPE).stdout
-        version = res.decode().strip()
-        os.system(f'npm install -g @lightdash/cli@{version}')
-        # Authenticate CLI
-        print('Authentication lightdash CLI login...')
-        os.system(f'lightdash login {lightdash_domain} --token {api_key}')
-        # Stop previews
-        print('Beginning closing previews...')
+        to_delete = []
+    for i in range(0,len(previews)):
+        if previews[i]['name'] not in branches:
+            to_delete.append(previews[i])
+    # Print results
+    tot_deletes = len(to_delete)
+    if tot_deletes == 0:
+        print('No previews to be deleted, process completed')
+    else:
+        print(f"Identified {tot_deletes} Lightdash previews to be deleted")
+        ## CLOSE UNNEEDED LIGHTDASH PREVIEWS
         deleted = 0
-        for i in range(0, len(to_delete)):
-            os.system(f'''
-                lightdash stop-preview --name '{to_delete[i]['name']}'
-            ''')
-            deleted += 1
-        print(f'Deleted {deleted} total previews')
+        not_deleted = []
+        for i in to_delete:
+            print(f"Deleting preview: {i['name']} ...")
+            delete = requests.delete(f"{lightdash_url}org/projects/{i['projectUuid']}", headers = headers)
+            if delete.status_code == 200:
+                deleted += 1
+            else:
+                not_deleted.append(i)
+                print(f"Failed to delete preview: {i['name']}")
+        print(f'Successfully deleted {deleted} previews')
+        if len(not_deleted) == 0:
+            print('No previews failed to be deleted')
+        else:
+            print(f'Could not delete {len(not_deleted)} previews:')
+            for i in not_deleted:
+                print(i['name'])
