@@ -25,6 +25,10 @@ if __name__ == '__main__':
         SPACE_UUID_MAP[s["uuid"]] = new_space["uuid"]
 
     print('Getting all spaces and content')
+    full_spaces = []
+    for s in all_spaces:
+        print(f'Getting all charts and dashboards for space {s["name"]}')
+        full_spaces.append(source_client.space(s["uuid"], summary=False))
     full_spaces = [source_client.space(s["uuid"], summary=False) for s in all_spaces]
     all_charts = [chart for space in full_spaces for chart in space["queries"]]
     all_dashboards = [dashboard for space in full_spaces for dashboard in space["dashboards"]]
@@ -55,7 +59,9 @@ if __name__ == '__main__':
                 if tile['type'] == 'saved_chart':
                     if "belongsToDashboard" in tile["properties"] and tile["properties"]["belongsToDashboard"] == True:
                         print(f'Copying chart that belongs to dashboard: {tile["properties"]["chartName"]}')
-                        chart = target_client.saved_chart(tile['properties']['savedChartUuid'])
+                        chart = source_client.saved_chart(tile['properties']['savedChartUuid'])
+                        if 'spaceUuid' in chart:
+                            chart['spaceUuid'] = SPACE_UUID_MAP[chart['spaceUuid']]
                         new_chart = target_client.create_saved_chart({**chart, 'dashboardUuid': new_dashboard["uuid"]})
                         CHART_UUID_MAP[chart["uuid"]] = new_chart["uuid"]
 
