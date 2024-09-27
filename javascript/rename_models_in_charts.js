@@ -8,11 +8,12 @@
 
 import fetch from 'node-fetch';
 
-const projectUuid = `3675b69e-8324-4110-bdca-059031aa8da3`
-const apiKey = '-'
-const oldModel = 'completed_order_count'
-const newModel = 'completed_order_count_test'
+const projectUuid = `3675b69e-8324-4110-bdca-059031aa8da3` // Replace me
+const apiKey = 'ae1d564a496cea41f74de7ffd920f724' // Replace me
+const oldModel = 'customers' // Replace me
+const newModel = 'users' // Replace me
 const testing = true // set to false to actually update the charts
+const debug = false // Enable this to see more logs 
 
 const apiUrl = 'http://localhost:3000/api/v1'
 
@@ -134,16 +135,28 @@ const replaceFilters = (filters) => {
 
 }
 const rename = async () => {
-
-    const spaceFetch = await fetch(`${apiUrl}/projects/${projectUuid}/spaces-and-content`, {
+    if (debug) console.log('Making request to get space summaries')
+    const spaceSummaryFetch = await fetch(`${apiUrl}/projects/${projectUuid}/spaces`, {
         method: 'GET',
         headers,
     });
+    if (debug) console.log('Space summary response', spaceSummaryFetch.status)
 
-    const spaceResponse = await  spaceFetch.json()
-    console.log('Got Space response', spaceResponse.results.length)
+    const spaceResponse = await  spaceSummaryFetch.json()
+    console.log('This project has '+spaceResponse.results.length+' spaces' )
 
-    spaceResponse.results.map(async (space) => {
+    spaceResponse.results.map(async (spaceSummary) => {
+        if (debug) console.log(`Making request to get space ${spaceSummary.uuid}`)
+
+        const spaceFetch = await fetch(`${apiUrl}/projects/${projectUuid}/spaces/${spaceSummary.uuid}`, {
+            method: 'GET',
+            headers,
+        });
+        if (debug) console.log('Space response', spaceFetch.status)
+
+        const space = (await spaceFetch.json()).results
+        console.log(`Space ${space.name} has ${space.queries.length} charts and ${space.queries.dashboards} dashboards` )
+
         space.queries.map(async (query) => {
 
             const savedChartUuid = query.uuid 
@@ -174,7 +187,6 @@ const rename = async () => {
                 }
             }
 
-            //console.log('metricQuery', savedChart.metricQuery)
             const hasChanges = JSON.stringify(savedChart) !== JSON.stringify(newChart)
 
             if (!hasChanges) {
@@ -186,17 +198,17 @@ const rename = async () => {
                 console.log('------')
                 console.info(JSON.stringify(newChart)  )
                 console.log('------')
-
             }
-/*
-            console.log('replacing tableName ', savedChart.tableName , 'with', newChart.tableName)
-            console.log('replacing tableConfig ', savedChart.tableConfig , 'with', newChart.tableConfig)
-            console.log('replacing metricQuery.dimensions ', savedChart.metricQuery.dimensions , 'with', newChart.metricQuery.dimensions)
-            console.log('replacing filters ', savedChart.metricQuery.filters , 'with', newChart.metricQuery.filters)
-            console.log('replacing tableCalculations ', savedChart.metricQuery.tableCalculations , 'with', newChart.metricQuery.tableCalculations)
 
-            console.log('updating new chart', newChart)
-            */
+            if (debug) {
+                console.log('replacing tableName ', savedChart.tableName , 'with', newChart.tableName)
+                console.log('replacing tableConfig ', savedChart.tableConfig , 'with', newChart.tableConfig)
+                console.log('replacing metricQuery.dimensions ', savedChart.metricQuery.dimensions , 'with', newChart.metricQuery.dimensions)
+                console.log('replacing filters ', savedChart.metricQuery.filters , 'with', newChart.metricQuery.filters)
+                console.log('replacing tableCalculations ', savedChart.metricQuery.tableCalculations , 'with', newChart.metricQuery.tableCalculations)
+
+                console.log('updating new chart', newChart)
+            }
             if (testing===false){
 
                 const updateResponse = await fetch(`${apiUrl}/saved/${savedChartUuid}/version`, {
