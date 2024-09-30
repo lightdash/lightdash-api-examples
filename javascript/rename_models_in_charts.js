@@ -66,11 +66,11 @@ const replaceChartConfig = (chartConfig) => {
                     layout: {
                         ...chartConfig.config.layout,
                         xField: replaceModelPrefix(chartConfig.config.layout.xField),
-                        yField: chartConfig.config.layout.yField.map(replaceModelPrefix),
+                        yField: chartConfig.config.layout.yField?.map(replaceModelPrefix),
                     },
                     eChartsConfig: {
                         ...chartConfig.config.eChartsConfig,
-                        series: chartConfig.config.eChartsConfig.series.map((serie) => {
+                        series: chartConfig.config.eChartsConfig.series?.map((serie) => {
                             return {
                                 ...serie,
                                 encode: {
@@ -146,81 +146,85 @@ const rename = async () => {
     console.log('This project has '+spaceResponse.results.length+' spaces' )
 
     spaceResponse.results.map(async (spaceSummary) => {
-        if (debug) console.log(`Making request to get space ${spaceSummary.uuid}`)
+        
+            if (debug) console.log(`Making request to get space ${spaceSummary.uuid}`)
 
-        const spaceFetch = await fetch(`${apiUrl}/projects/${projectUuid}/spaces/${spaceSummary.uuid}`, {
-            method: 'GET',
-            headers,
-        });
-        if (debug) console.log('Space response', spaceFetch.status)
-
-        const space = (await spaceFetch.json()).results
-        console.log(`Space ${space.name} has ${space.queries.length} charts and ${space.queries.dashboards} dashboards` )
-
-        space.queries.map(async (query) => {
-
-            const savedChartUuid = query.uuid 
-
-            const savedChartFetch = await fetch(`${apiUrl}/saved/${savedChartUuid}`, {
+            const spaceFetch = await fetch(`${apiUrl}/projects/${projectUuid}/spaces/${spaceSummary.uuid}`, {
                 method: 'GET',
                 headers,
             });
-            const savedChartResponse = await savedChartFetch.json()
+            if (debug) console.log('Space response', spaceFetch.status)
 
-            const savedChart = savedChartResponse.results
-            const newChart = {
-                ...savedChart, 
-                tableName: savedChart.tableName.replace(new RegExp(`^${oldModel}$`, 'g'), newModel),
-                tableConfig: {
-                    ...savedChart.tableConfig, 
-                    columnOrder: savedChart.tableConfig.columnOrder.map(replaceModelPrefix)
-                },
-                
-                chartConfig: replaceChartConfig(savedChart.chartConfig),
-                metricQuery: {
-                    ...savedChart.metricQuery,
-                    dimensions: savedChart.metricQuery.dimensions.map(replaceModelPrefix),
-                    metrics: savedChart.metricQuery.metrics.map(replaceModelPrefix),
-                    filters: replaceFilters(savedChart.metricQuery.filters),
-                    tableCalculations: savedChart.metricQuery.tableCalculations?.map(tc => ({...tc, sql: replaceModelPrefix(tc.sql)})),
-                    sorts: savedChart.metricQuery.sorts.map((sort) => ({...sort, fieldId: replaceModelPrefix(sort.fieldId)}) ),
-                }
-            }
+            const space = (await spaceFetch.json()).results
+            console.log(`Space ${space.name} has ${space.queries.length} charts and ${space.queries.dashboards} dashboards` )
 
-            const hasChanges = JSON.stringify(savedChart) !== JSON.stringify(newChart)
+            space.queries.map(async (query) => {
+                try {
+                const savedChartUuid = query.uuid 
 
-            if (!hasChanges) {
-                console.log(`chart ${savedChart.name} has no changes`)
-                return 
-            }else {
-                console.log(`--------------chart ${savedChart.name} (${savedChartUuid}) has changes ---------`)
-                console.info(JSON.stringify(savedChart)   )
-                console.log('------')
-                console.info(JSON.stringify(newChart)  )
-                console.log('------')
-            }
-
-            if (debug) {
-                console.log('replacing tableName ', savedChart.tableName , 'with', newChart.tableName)
-                console.log('replacing tableConfig ', savedChart.tableConfig , 'with', newChart.tableConfig)
-                console.log('replacing metricQuery.dimensions ', savedChart.metricQuery.dimensions , 'with', newChart.metricQuery.dimensions)
-                console.log('replacing filters ', savedChart.metricQuery.filters , 'with', newChart.metricQuery.filters)
-                console.log('replacing tableCalculations ', savedChart.metricQuery.tableCalculations , 'with', newChart.metricQuery.tableCalculations)
-
-                console.log('updating new chart', newChart)
-            }
-            if (testing===false){
-
-                const updateResponse = await fetch(`${apiUrl}/saved/${savedChartUuid}/version`, {
-                    method: 'POST',
+                const savedChartFetch = await fetch(`${apiUrl}/saved/${savedChartUuid}`, {
+                    method: 'GET',
                     headers,
-                    body: JSON.stringify(newChart) 
                 });
-                console.log(`Chart updated ${savedChartUuid}: response status ${updateResponse.status}`)
+                const savedChartResponse = await savedChartFetch.json()
 
+                const savedChart = savedChartResponse.results
+                const newChart = {
+                    ...savedChart, 
+                    tableName: savedChart.tableName.replace(new RegExp(`^${oldModel}$`, 'g'), newModel),
+                    tableConfig: {
+                        ...savedChart.tableConfig, 
+                        columnOrder: savedChart.tableConfig.columnOrder.map(replaceModelPrefix)
+                    },
+                    
+                    chartConfig: replaceChartConfig(savedChart.chartConfig),
+                    metricQuery: {
+                        ...savedChart.metricQuery,
+                        dimensions: savedChart.metricQuery.dimensions.map(replaceModelPrefix),
+                        metrics: savedChart.metricQuery.metrics.map(replaceModelPrefix),
+                        filters: replaceFilters(savedChart.metricQuery.filters),
+                        tableCalculations: savedChart.metricQuery.tableCalculations?.map(tc => ({...tc, sql: replaceModelPrefix(tc.sql)})),
+                        sorts: savedChart.metricQuery.sorts.map((sort) => ({...sort, fieldId: replaceModelPrefix(sort.fieldId)}) ),
+                    }
+                }
+
+                const hasChanges = JSON.stringify(savedChart) !== JSON.stringify(newChart)
+
+                if (!hasChanges) {
+                    console.log(`chart ${savedChart.name} has no changes`)
+                    return 
+                }else {
+                    console.log(`--------------chart ${savedChart.name} (${savedChartUuid}) has changes ---------`)
+                    console.info(JSON.stringify(savedChart)   )
+                    console.log('------')
+                    console.info(JSON.stringify(newChart)  )
+                    console.log('------')
+                }
+
+                if (debug) {
+                    console.log('replacing tableName ', savedChart.tableName , 'with', newChart.tableName)
+                    console.log('replacing tableConfig ', savedChart.tableConfig , 'with', newChart.tableConfig)
+                    console.log('replacing metricQuery.dimensions ', savedChart.metricQuery.dimensions , 'with', newChart.metricQuery.dimensions)
+                    console.log('replacing filters ', savedChart.metricQuery.filters , 'with', newChart.metricQuery.filters)
+                    console.log('replacing tableCalculations ', savedChart.metricQuery.tableCalculations , 'with', newChart.metricQuery.tableCalculations)
+
+                    console.log('updating new chart', newChart)
+                }
+                if (testing===false){
+
+                    const updateResponse = await fetch(`${apiUrl}/saved/${savedChartUuid}/version`, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify(newChart) 
+                    });
+                    console.log(`Chart updated ${savedChartUuid}: response status ${updateResponse.status}`)
+
+                }
+            } catch (e) {
+                console.error(`Error updating chart "${savedChart.name}", consider removing this chart or updating manually`, e)
             }
-
         })
+        
     })
 }
 
