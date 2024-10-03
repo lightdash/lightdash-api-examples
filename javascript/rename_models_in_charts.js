@@ -146,29 +146,33 @@ const rename = async () => {
     console.log('This project has '+spaceResponse.results.length+' spaces' )
 
     spaceResponse.results.map(async (spaceSummary) => {
-        
-            if (debug) console.log(`Making request to get space ${spaceSummary.uuid}`)
+        if (debug) console.log(`Making request to get space ${spaceSummary.uuid}`)
 
-            const spaceFetch = await fetch(`${apiUrl}/projects/${projectUuid}/spaces/${spaceSummary.uuid}`, {
-                method: 'GET',
-                headers,
-            });
-            if (debug) console.log('Space response', spaceFetch.status)
+        const spaceFetch = await fetch(`${apiUrl}/projects/${projectUuid}/spaces/${spaceSummary.uuid}`, {
+            method: 'GET',
+            headers,
+        });
+        if (debug) console.log('Space response', spaceFetch.status)
 
-            const space = (await spaceFetch.json()).results
-            console.log(`Space ${space.name} has ${space.queries.length} charts and ${space.queries.dashboards} dashboards` )
+        const space = (await spaceFetch.json()).results
+        console.log(`Space ${space.name} has ${space.queries.length} charts and ${space.queries.dashboards} dashboards` )
 
-            space.queries.map(async (query) => {
-                try {
+        space.queries.map(async (query) => {
+            if (debug) console.log(`Making request to get chart ${query.uuid}`)
+            let savedChart = undefined
+            let savedChartResponse = undefined
+
+            try {
                 const savedChartUuid = query.uuid 
 
                 const savedChartFetch = await fetch(`${apiUrl}/saved/${savedChartUuid}`, {
                     method: 'GET',
                     headers,
                 });
-                const savedChartResponse = await savedChartFetch.json()
+                
+                savedChartResponse = await savedChartFetch.json()
 
-                const savedChart = savedChartResponse.results
+                savedChart = savedChartResponse.results
                 const newChart = {
                     ...savedChart, 
                     tableName: savedChart.tableName.replace(new RegExp(`^${oldModel}$`, 'g'), newModel),
@@ -221,10 +225,26 @@ const rename = async () => {
 
                 }
             } catch (e) {
-                console.error(`Error updating chart "${savedChart.name}", consider removing this chart or updating manually`, e)
+                console.error('------------------')
+                if (!savedChart) {
+                    console.error(`Error fetching chart ${query.uuid}`, e)
+                    if (debug) {
+                        console.error('here is a snippet of the query saved in the space: ')
+                        console.error(JSON.stringify(query, null, 2))
+                        console.error('------')
+                        console.error('here is a reseponse from the server: ')
+                        console.error(JSON.stringify(savedChartResponse, null, 2))
+                    }
+                } else {
+                    console.error(`Error updating chart "${savedChart.name}", consider removing this chart or updating manually`, e)
+                    if (debug) {
+                        console.error('here is a snippet of the chart: ')
+                        console.error(JSON.stringify(savedChart, null, 2))
+                    }
+                }
+                console.error('------------------')
             }
         })
-        
     })
 }
 
