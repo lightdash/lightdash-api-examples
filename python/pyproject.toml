@@ -8,6 +8,8 @@ authors = ["oliverlaslett <olaslett@gmail.com>"]
 python = ">=3.9"
 requests = ">=2.0.0"
 pandas = "^2.1.0"
+urllib3 = "^2.2.3"
+openpyxl = "^3.1.5"
 
 [tool.poetry.dev-dependencies]
 
