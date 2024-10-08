@@ -103,11 +103,12 @@ const replaceChartConfig = (chartConfig) => {
 const replaceFilters = (filters) => {
     if (!filters || Object.keys(filters).length  === 0) {
         return filters
-    } else if ('dimensions' in filters  || 'metrics' in filters) {
+    } else if ('dimensions' in filters  || 'metrics' in filters || 'tableCalculations' in  filters) {
         return {
             ...filters, 
             dimensions: replaceFilters(filters.dimensions),
-            metrics: replaceFilters(filters.metrics)
+            metrics: replaceFilters(filters.metrics),
+            tableCalculations: replaceFilters(filters.tableCalculations)
         }
         
     }  else if ('and' in filters) {
@@ -197,7 +198,7 @@ const rename = async () => {
                 if (!hasChanges) {
                     console.log(`chart ${savedChart.name} has no changes`)
                     return 
-                }else {
+                } else {
                     console.log(`--------------chart ${savedChart.name} (${savedChartUuid}) has changes ---------`)
                     console.info(JSON.stringify(savedChart)   )
                     console.log('------')
@@ -226,7 +227,13 @@ const rename = async () => {
                 }
             } catch (e) {
                 console.error('------------------')
-                if (!savedChart) {
+                if (savedChart) {
+                    console.error(`Error updating chart "${savedChart.name}", consider removing this chart or updating manually`, e)
+                    if (debug) {
+                        console.error('here is a snippet of the chart: ')
+                        console.error(JSON.stringify(savedChart, null, 2))
+                    }
+                } else {
                     console.error(`Error fetching chart ${query.uuid}`, e)
                     if (debug) {
                         console.error('here is a snippet of the query saved in the space: ')
@@ -234,12 +241,6 @@ const rename = async () => {
                         console.error('------')
                         console.error('here is a reseponse from the server: ')
                         console.error(JSON.stringify(savedChartResponse, null, 2))
-                    }
-                } else {
-                    console.error(`Error updating chart "${savedChart.name}", consider removing this chart or updating manually`, e)
-                    if (debug) {
-                        console.error('here is a snippet of the chart: ')
-                        console.error(JSON.stringify(savedChart, null, 2))
                     }
                 }
                 console.error('------------------')
