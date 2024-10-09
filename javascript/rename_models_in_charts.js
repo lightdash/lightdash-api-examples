@@ -23,12 +23,14 @@ const headers = {
 }
 
 const replaceModelPrefix = (dimension) => {
-    // This function only works if oldModel is a prefix of newModel
-    // otherwise it will do nothing
-    // This is to avoid replacing the same model multiple times
-    if(!dimension || dimension.includes(newModel)) return dimension // Already replaced
-    return dimension.replace(new RegExp(`${oldModel}`, 'g'), `${newModel}`)
-}
+    // Check if the dimension is null or starts with the new model
+    if (!dimension || dimension.startsWith(newModel)) {
+        return dimension;
+    }
+
+    // Replace oldModel with newModel only at the beginning of the string (as prefix)
+    return dimension.replace(new RegExp(`^${oldModel}`), newModel);
+};
 
 function renameKeys(obj) {
     const keyValues = Object.keys(obj).map(key => {
@@ -135,6 +137,7 @@ const replaceFilters = (filters) => {
 
 
 }
+
 const rename = async () => {
     if (debug) console.log('Making request to get space summaries')
     const spaceSummaryFetch = await fetch(`${apiUrl}/projects/${projectUuid}/spaces`, {
