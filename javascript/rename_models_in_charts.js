@@ -32,6 +32,20 @@ const replaceModelPrefix = (dimension) => {
     return dimension.replace(new RegExp(`^${oldModel}`), newModel);
 };
 
+const replaceModelPrefixInSql = (sql) => {
+    const getModelMatcher = (f) => new RegExp(`([^a-zA-Z0-9_])(?:${f})(\\.)`, 'g')
+
+    // Check if the sql is null, empty or already has the new model
+    if (!sql || sql.length === 0 || getModelMatcher(newModel).test(sql)) {
+        return sql;
+    }
+
+    // Replace oldModel with newModel for every occurrence in the sql
+    // references in sql start with the model name and then is followed by a dot
+    // before the name we can match a non-ascii character or the beginning of the string
+    return sql.replace(getModelMatcher(oldModel), `$1${newModel}.`);
+};
+
 function renameKeys(obj) {
     const keyValues = Object.keys(obj).map(key => {
       const newKey = replaceModelPrefix(key)
@@ -191,7 +205,7 @@ const rename = async () => {
                         dimensions: savedChart.metricQuery.dimensions.map(replaceModelPrefix),
                         metrics: savedChart.metricQuery.metrics.map(replaceModelPrefix),
                         filters: replaceFilters(savedChart.metricQuery.filters),
-                        tableCalculations: savedChart.metricQuery.tableCalculations?.map(tc => ({...tc, sql: replaceModelPrefix(tc.sql)})),
+                        tableCalculations: savedChart.metricQuery.tableCalculations?.map(tc => ({...tc, sql: replaceModelPrefixInSql(tc.sql)})),
                         sorts: savedChart.metricQuery.sorts.map((sort) => ({...sort, fieldId: replaceModelPrefix(sort.fieldId)}) ),
                     }
                 }
