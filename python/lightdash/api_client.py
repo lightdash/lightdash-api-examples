@@ -122,3 +122,21 @@ class LightdashApiClient:
 
     def update_user_attribute(self, attribute_uuid, attribute):
         return self._api_call('PUT', f'/org/attributes/{attribute_uuid}', json=attribute)
+
+    def org_groups(self, include_members=10000):
+        """Get all organization groups with member information"""
+        params = {'includeMembers': include_members}
+        return self._api_call('GET', '/org/groups', params=params)
+    
+    def project_group_accesses(self, project_uuid):
+        """Get group access permissions for a specific project"""
+        return self._api_call('GET', f'/projects/{project_uuid}/groupAccesses')
+    
+    def org_users_with_pagination(self, page=1, page_size=10, include_groups=10000):
+        """Get organization users with pagination support"""
+        params = {
+            'page': page,
+            'pageSize': page_size,
+            'includeGroups': include_groups,
+        }
+        return self._api_call('GET', '/org/users', params=params)
